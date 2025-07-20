@@ -1,0 +1,34 @@
+{
+    "name": "etel-soft/cqrs",
+    "type": "library",
+    "homepage": "https://bitbucket.org/etel-soft/cqrs",
+    "description": "Represents contracts and implementation for the CQRS pattern.",
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "authors": [
+        {
+            "name": "Mykola Zyk",
+            "email": "mykola@etel.dev"
+        }
+    ],
+    "require": {
+        "php": "^8.4"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.84",
+        "phpstan/phpstan": "^2.0",
+        "phpunit/phpunit": "^12.0",
+        "symfony/messenger": "^7.3",
+        "symfony/property-access": "^7.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Etel\\CQRS\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Etel\\CQRSTests\\": "tests"
+        }
+    }
+}
