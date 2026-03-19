@@ -1,7 +1,7 @@
 {
-    "name": "etel-soft/cqrs",
+    "name": "etel/cqrs",
     "type": "library",
-    "homepage": "https://bitbucket.org/etel-soft/cqrs",
+    "homepage": "https://github.com/etel-soft/cqrs",
     "description": "Represents contracts and implementation for the CQRS pattern.",
     "license": "MIT",
     "minimum-stability": "stable",
