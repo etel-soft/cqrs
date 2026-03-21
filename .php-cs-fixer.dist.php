@@ -16,11 +16,11 @@ return new Config()
     ->setRiskyAllowed(isRiskyAllowed: true)
     ->setRules(rules: [
         '@PSR12' => true,
-        '@PHP80Migration' => true,
-        '@PHP81Migration' => true,
-        '@PHP82Migration' => true,
-        '@PHP83Migration' => true,
-        '@PHP84Migration' => true,
+        '@PHP8x0Migration' => true,
+        '@PHP8x1Migration' => true,
+        '@PHP8x2Migration' => true,
+        '@PHP8x3Migration' => true,
+        '@PHP8x4Migration' => true,
         '@PhpCsFixer' => true,
         'array_syntax' => ['syntax' => 'short'],
         'blank_line_before_statement' => [
@@ -29,20 +29,23 @@ return new Config()
                 'foreach', 'if', 'return', 'switch', 'throw', 'try', 'while', 'yield',
             ],
         ],
-        'class_attributes_separation' => ['elements' => ['method' => 'one', 'property' => 'one']],
+        'class_attributes_separation' => [
+            'elements' => ['method' => 'one', 'property' => 'one', 'trait_import' => 'none'],
+        ],
         'class_definition' => ['single_line' => false],
         'concat_space' => ['spacing' => 'one'],
         'declare_strict_types' => true,
         'global_namespace_import' => ['import_classes' => true, 'import_constants' => true, 'import_functions' => true],
         'is_null' => true,
         'mb_str_functions' => true,
+        'method_argument_space' => ['on_multiline' => 'ignore'],
         'multiline_whitespace_before_semicolons' => ['strategy' => 'no_multi_line'],
         'native_function_invocation' => ['include' => ['@all']],
         'no_extra_blank_lines' => [
             'tokens' => [
                 'case', 'continue', 'curly_brace_block', 'default', 'extra',
                 'parenthesis_brace_block', 'return', 'square_brace_block',
-                'switch', 'throw', 'use', 'use_trait',
+                'switch', 'throw', 'use',
             ],
         ],
         'non_printable_character' => ['use_escape_sequences_in_strings' => true],
