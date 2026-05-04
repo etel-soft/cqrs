@@ -13,7 +13,7 @@ jobs:
       matrix:
         php: ['8.4', '8.5']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -28,7 +28,7 @@ jobs:
     name: PHPStan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -43,7 +43,7 @@ jobs:
     name: PHP-CS-Fixer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -53,3 +53,34 @@ jobs:
       - run: composer install --no-interaction --prefer-dist
 
       - run: vendor/bin/php-cs-fixer check --diff
+
+  code-coverage:
+      name: Code Coverage
+      runs-on: ubuntu-latest
+      steps:
+          - uses: actions/checkout@v6
+
+          - uses: shivammathur/setup-php@v2
+            with:
+                php-version: '8.4'
+                coverage: xdebug
+
+          - run: composer install --no-interaction --prefer-dist
+
+          - run: vendor/bin/phpunit --log-junit test-results.xml --coverage-openclover=code-coverage.xml
+
+          - name: Upload test results to Codecov.io
+            uses: codecov/codecov-action@v6
+            with:
+                token: ${{ secrets.CODECOV_TOKEN }}
+                report_type: test_results
+                disable_search: true
+                files: ./test-results.xml
+
+          - name: Upload code coverage data to Codecov.io
+            uses: codecov/codecov-action@v6
+            with:
+                token: ${{ secrets.CODECOV_TOKEN }}
+                report_type: coverage
+                disable_search: true
+                files: ./code-coverage.xml
