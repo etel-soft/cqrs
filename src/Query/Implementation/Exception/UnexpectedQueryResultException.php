@@ -10,6 +10,7 @@ use InvalidArgumentException;
 use Symfony\Component\Messenger\Exception\ExceptionInterface;
 
 use function gettype;
+use function is_object;
 use function sprintf;
 
 /**
@@ -26,7 +27,7 @@ final class UnexpectedQueryResultException extends InvalidArgumentException impl
     {
         return new self(message: sprintf(
             'Result type "%s" not matched expected type "%s" in query%s "%s".',
-            gettype(value: $result),
+            is_object(value: $result) ? $result::class : gettype(value: $result),
             $expectedType,
             $query instanceof QueryInput ? ' input' : '',
             $query::class

@@ -60,6 +60,7 @@ return new Config()
         'phpdoc_trim_consecutive_blank_line_separation' => true,
         'php_unit_test_class_requires_covers' => false,
         'psr_autoloading' => true,
+        'single_line_comment_style' => ['comment_types' => ['hash']],
         'single_line_throw' => false,
         'strict_comparison' => true,
         'yoda_style' => ['equal' => false, 'identical' => false, 'less_and_greater' => false],

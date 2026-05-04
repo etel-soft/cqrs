@@ -12,8 +12,9 @@ use Symfony\Component\PropertyAccess\Exception\UnexpectedTypeException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Throwable;
 
+use function gettype;
+use function is_object;
 use function sprintf;
-use function var_export;
 
 /**
  * @see UnexpectedQueryPropertyValue
@@ -42,9 +43,9 @@ final class UnexpectedQueryPropertyValueException extends InvalidArgumentExcepti
 
         return new self(
             message: sprintf(
-                'Property by path "%s" with value "%s" in query%s "%s" failed requirements.',
+                'Property by path "%s" with value type "%s" in query%s "%s" failed requirements.',
                 $propertyPath,
-                var_export(value: $value, return: true),
+                is_object(value: $value) ? $value::class : gettype(value: $value),
                 $query instanceof QueryInput ? ' input' : '',
                 $query::class
             ),
