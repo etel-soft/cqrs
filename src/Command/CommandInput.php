@@ -22,6 +22,8 @@ use Etel\CQRS\Command\Exception\UnexpectedCommandPropertyValue;
  * toCommand() method.
  *
  * Of course, this step can be omitted when the source data is already validated and the command can be filled directly.
+ *
+ * @template TCommand of object
  */
 interface CommandInput
 {
@@ -30,6 +32,8 @@ interface CommandInput
      *
      * @throws InvalidCommandData             When input data invalid by any reason
      * @throws UnexpectedCommandPropertyValue When input property has an unexpected value
+     *
+     * @return TCommand
      */
     public function toCommand(): object;
 }

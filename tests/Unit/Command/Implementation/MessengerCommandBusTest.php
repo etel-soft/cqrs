@@ -37,8 +37,8 @@ final class MessengerCommandBusTest extends UnitTestCase
     }
 
     #[Test]
-    #[TestDox('Dispatches without waiting for result when return is false')]
-    public function testAsyncDispatchReturnsFalse(): void
+    #[TestDox('Dispatches without waiting for result when expectResult is false')]
+    public function testAsyncDispatch(): void
     {
         $command = new stdClass();
         $bus = new MessengerCommandBus(
@@ -47,7 +47,7 @@ final class MessengerCommandBusTest extends UnitTestCase
                 ->getSealedMock()
         );
 
-        $this->assertNull($bus->command(command: $command));
+        $bus->command(command: $command);
     }
 
     #[Test]
@@ -71,7 +71,7 @@ final class MessengerCommandBusTest extends UnitTestCase
     }
 
     #[Test]
-    #[TestDox('Returns handler result when return is true')]
+    #[TestDox('Returns handler result when expectResult is true')]
     public function testSyncDispatchReturnsResult(): void
     {
         $command = new stdClass();
@@ -85,7 +85,7 @@ final class MessengerCommandBusTest extends UnitTestCase
                 ->getSealedStub()
         );
 
-        $this->assertSame($expectedResult, $bus->command(command: $command, return: true));
+        $this->assertSame($expectedResult, $bus->command(command: $command, expectResult: true));
     }
 
     #[Test]
@@ -103,7 +103,7 @@ final class MessengerCommandBusTest extends UnitTestCase
                 ->getSealedStub()
         );
 
-        $this->assertSame($expectedResult, $bus->command(command: $command, return: DateTimeImmutable::class));
+        $this->assertSame($expectedResult, $bus->command(command: $command, expectResult: DateTimeImmutable::class));
     }
 
     #[Test]
@@ -122,7 +122,7 @@ final class MessengerCommandBusTest extends UnitTestCase
 
         $this->expectException(UnexpectedCommandResultException::class);
 
-        $bus->command(command: $command, return: DateTimeImmutable::class);
+        $bus->command(command: $command, expectResult: DateTimeImmutable::class);
     }
 
     #[Test]
@@ -139,7 +139,7 @@ final class MessengerCommandBusTest extends UnitTestCase
 
         $this->expectException(InvalidCommandReturnConfigurationException::class);
 
-        $bus->command(command: $command, return: true);
+        $bus->command(command: $command, expectResult: true);
     }
 
     #[Test]
@@ -159,6 +159,6 @@ final class MessengerCommandBusTest extends UnitTestCase
 
         $this->expectException(LogicException::class);
 
-        $bus->command(command: $command, return: true);
+        $bus->command(command: $command, expectResult: true);
     }
 }

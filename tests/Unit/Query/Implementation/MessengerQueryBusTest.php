@@ -37,7 +37,7 @@ final class MessengerQueryBusTest extends UnitTestCase
     }
 
     #[Test]
-    #[TestDox('Dispatches without waiting for result when return is false')]
+    #[TestDox('Dispatches without waiting for result when expectResult is false')]
     public function testAsyncDispatchReturnsFalse(): void
     {
         $query = new stdClass();
@@ -48,7 +48,7 @@ final class MessengerQueryBusTest extends UnitTestCase
                 ->getSealedMock()
         );
 
-        $this->assertNull($bus->query(query: $query, return: false));
+        $bus->query(query: $query, expectResult: false);
     }
 
     #[Test]
@@ -68,11 +68,11 @@ final class MessengerQueryBusTest extends UnitTestCase
                 ->getSealedMock()
         );
 
-        $bus->query(query: $query, return: false, stamps: [$stamp]);
+        $bus->query(query: $query, expectResult: false, stamps: [$stamp]);
     }
 
     #[Test]
-    #[TestDox('Returns handler result when return is true (default)')]
+    #[TestDox('Returns handler result when expectResult is true (default)')]
     public function testSyncDispatchReturnsResult(): void
     {
         $query = new stdClass();
@@ -104,7 +104,7 @@ final class MessengerQueryBusTest extends UnitTestCase
                 ->getSealedStub()
         );
 
-        $this->assertSame($expectedResult, $bus->query(query: $query, return: DateTimeImmutable::class));
+        $this->assertSame($expectedResult, $bus->query(query: $query, expectResult: DateTimeImmutable::class));
     }
 
     #[Test]
@@ -123,7 +123,7 @@ final class MessengerQueryBusTest extends UnitTestCase
 
         $this->expectException(UnexpectedQueryResultException::class);
 
-        $bus->query(query: $query, return: DateTimeImmutable::class);
+        $bus->query(query: $query, expectResult: DateTimeImmutable::class);
     }
 
     #[Test]

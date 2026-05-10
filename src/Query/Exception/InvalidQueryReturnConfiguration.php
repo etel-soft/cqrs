@@ -8,6 +8,6 @@ use Throwable;
 
 /**
  * Exception for cases when a query cannot be handled immediately (i.e., asynchronous), but the bus requires return
- * value ($return parameter specify a result (i.e., not FALSE)).
+ * value ($expectResult parameter specifies a result (i.e., not FALSE)).
  */
 interface InvalidQueryReturnConfiguration extends Throwable {}
