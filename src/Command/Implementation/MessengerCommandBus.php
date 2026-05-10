@@ -36,17 +36,17 @@ final class MessengerCommandBus implements CommandBus
      * @throws InvalidCommandDataException                When command/input data passed validation, but still invalid
      *                                                    by any reason
      * @throws InvalidCommandReturnConfigurationException When command cannot be handled immediately
-     *                                                    (i.e., asynchronous), but $return parameter not FALSE
+     *                                                    (i.e., asynchronous), but $expectResult parameter not FALSE
      * @throws UnexpectedCommandPropertyValueException    When command/input passed validation but property
      *                                                    still has an unexpected value
      * @throws UnexpectedCommandResultException           When a handler returns something not matched to specified FQCN
-     *                                                    in $return parameter
+     *                                                    in $expectResult parameter
      * @throws ExceptionInterface                         For any other exceptions
      */
     #[Override]
-    public function command(object $command, bool|string $return = false, array $stamps = []): mixed
+    public function command(object $command, bool|string $expectResult = false, array $stamps = []): mixed
     {
-        if ($return === false) {
+        if ($expectResult === false) {
             $this->messageBus->dispatch($command, $stamps);
 
             return null;
@@ -62,8 +62,8 @@ final class MessengerCommandBus implements CommandBus
             throw $exception;
         }
 
-        if ($return !== true && !$result instanceof $return) {
-            throw UnexpectedCommandResultException::create(command: $command, expectedType: $return, result: $result);
+        if ($expectResult !== true && !$result instanceof $expectResult) {
+            throw UnexpectedCommandResultException::create(command: $command, expectedType: $expectResult, result: $result);
         }
 
         return $result;

@@ -21,6 +21,8 @@ use Etel\CQRS\Query\Exception\UnexpectedQueryPropertyValue;
  * After the successful validation, QueryInput will transform into a query by the middleware using toQuery() method.
  *
  * Of course, this step can be omitted when the source data is already validated and the query can be filled directly.
+ *
+ * @template TQuery of object
  */
 interface QueryInput
 {
@@ -29,6 +31,8 @@ interface QueryInput
      *
      * @throws InvalidQueryData             When input data invalid by any reason
      * @throws UnexpectedQueryPropertyValue When input property has an unexpected value
+     *
+     * @return TQuery
      */
     public function toQuery(): object;
 }

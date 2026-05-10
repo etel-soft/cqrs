@@ -36,17 +36,17 @@ final class MessengerQueryBus implements QueryBus
      * @throws InvalidQueryDataException                When query/input data passed validation, but still invalid
      *                                                  by any reason
      * @throws InvalidQueryReturnConfigurationException When a query cannot be handled immediately
-     *                                                  (i.e., asynchronous), but $return parameter not FALSE
+     *                                                  (i.e., asynchronous), but $expectResult parameter not FALSE
      * @throws UnexpectedQueryPropertyValueException    When query/input passed validation but property
      *                                                  still has an unexpected value
      * @throws UnexpectedQueryResultException           When a handler returns something not matched to specified FQCN
-     *                                                  in $return parameter
+     *                                                  in $expectResult parameter
      * @throws ExceptionInterface                       For any other exceptions
      */
     #[Override]
-    public function query(object $query, bool|string $return = true, array $stamps = []): mixed
+    public function query(object $query, bool|string $expectResult = true, array $stamps = []): mixed
     {
-        if ($return === false) {
+        if ($expectResult === false) {
             $this->messageBus->dispatch($query, $stamps);
 
             return null;
@@ -62,8 +62,8 @@ final class MessengerQueryBus implements QueryBus
             throw $exception;
         }
 
-        if ($return !== true && !$result instanceof $return) {
-            throw UnexpectedQueryResultException::create(query: $query, expectedType: $return, result: $result);
+        if ($expectResult !== true && !$result instanceof $expectResult) {
+            throw UnexpectedQueryResultException::create(query: $query, expectedType: $expectResult, result: $result);
         }
 
         return $result;
