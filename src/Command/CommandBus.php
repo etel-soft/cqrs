@@ -15,16 +15,11 @@ use Etel\CQRS\Command\Exception\UnexpectedCommandResult;
 interface CommandBus
 {
     /**
-     * Handles commands and (for synchronous commands) returns result.
+     * Dispatches a command and optionally returns the handler result.
      *
-     * For performance & RAD purposes, command bus can return values.
-     * The parameter $expectResult can specify the expected result behavior, where:
-     *  - FALSE means no result is expected (default);
-     *  - TRUE means any possible result value;
-     *  - FQCN as class-string to specify the expected instance type of the result.
-     *
-     * It is worth noting that in the case of asynchronous command execution, if the $expectResult parameter contains
-     * any value other than FALSE, an InvalidCommandReturnConfiguration will be thrown.
+     * By default, ($expectResult = false) the result is discarded — use this
+     * for fire-and-forget or asynchronous commands. Pass true or a FQCN
+     * when you need the result synchronously (e.g. a newly created entity's ID).
      *
      * @template T of object
      *
@@ -41,5 +36,9 @@ interface CommandBus
      *
      * @phpstan-return ($expectResult is false ? null : ($expectResult is class-string<T> ? T : mixed))
      */
-    public function command(object $command, bool|string $expectResult = false): mixed;
+    public function command(
+        object $command,
+        bool|string $expectResult = false,
+        ?CommandBusOptions $options = null
+    ): mixed;
 }

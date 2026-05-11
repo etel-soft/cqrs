@@ -7,7 +7,6 @@ namespace Etel\CQRS\Query\Exception;
 use Throwable;
 
 /**
- * Exception for cases when a query cannot be handled immediately (i.e., asynchronous), but the bus requires return
- * value ($expectResult parameter specifies a result (i.e., not FALSE)).
+ * Exception for cases when a query acts as asynchronous, but query can not be asynchronous.
  */
 interface InvalidQueryReturnConfiguration extends Throwable {}

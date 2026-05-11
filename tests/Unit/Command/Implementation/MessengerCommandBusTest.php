@@ -6,6 +6,8 @@ namespace Etel\CQRSTests\Unit\Command\Implementation;
 
 use DateTimeImmutable;
 use Etel\CQRS\Command\CommandBus;
+use Etel\CQRS\Command\CommandBusOptions;
+use Etel\CQRS\Command\Implementation\CommandBusOptionsStamp;
 use Etel\CQRS\Command\Implementation\Exception\InvalidCommandReturnConfigurationException;
 use Etel\CQRS\Command\Implementation\Exception\UnexpectedCommandResultException;
 use Etel\CQRS\Command\Implementation\MessengerCommandBus;
@@ -18,7 +20,6 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\LogicException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
-use Symfony\Component\Messenger\Stamp\StampInterface;
 
 /**
  * @internal
@@ -30,7 +31,7 @@ final class MessengerCommandBusTest extends UnitTestCase
     #[TestDox('Implements CommandBus interface')]
     public function testImplementsInterface(): void
     {
-        $bus = new MessengerCommandBus($this->createStub(MessageBusInterface::class));
+        $bus = new MessengerCommandBus(commandMessageBus: $this->createStub(MessageBusInterface::class));
 
         /* @noinspection PhpConditionAlreadyCheckedInspection */
         $this->assertInstanceOf(CommandBus::class, $bus);
@@ -51,23 +52,32 @@ final class MessengerCommandBusTest extends UnitTestCase
     }
 
     #[Test]
-    #[TestDox('Passes custom stamps when dispatching asynchronously')]
-    public function testAsyncDispatchForwardsStamps(): void
+    #[TestDox('Wraps CommandBusOptions in CommandBusOptionsStamp when dispatching')]
+    public function testDispatchWrapsOptionsInBusOptionsStamp(): void
     {
         $command = new stdClass();
-        $stamp = $this->createStub(StampInterface::class);
+        $options = new CommandBusOptions(delayMs: 1000);
+        $capturedStamps = null;
 
         $bus = new MessengerCommandBus(
-            commandMessageBus: $this->createMockConfig(type: MessageBusInterface::class)
-                ->addMethodReturns(
+            commandMessageBus: $this->createStubConfig(type: MessageBusInterface::class)
+                ->addMethodReturnsCallback(
                     name: 'dispatch',
-                    arguments: [$command, [$stamp]],
-                    return: new Envelope(message: $command)
+                    callback: function (object $message, array $stamps) use (&$capturedStamps): Envelope {
+                        $capturedStamps = $stamps;
+
+                        return new Envelope(message: $message);
+                    }
                 )
-                ->getSealedMock()
+                ->getSealedStub()
         );
 
-        $bus->command(command: $command, stamps: [$stamp]);
+        $bus->command(command: $command, options: $options);
+
+        $this->assertIsArray($capturedStamps);
+        $this->assertCount(1, $capturedStamps);
+        $this->assertInstanceOf(CommandBusOptionsStamp::class, $capturedStamps[0]);
+        $this->assertSame($options, $capturedStamps[0]->options);
     }
 
     #[Test]
@@ -143,7 +153,7 @@ final class MessengerCommandBusTest extends UnitTestCase
     }
 
     #[Test]
-    #[TestDox('Re-throws LogicException unrelated to zero-handled messages')]
+    #[TestDox('Throws LogicException when multiple handlers are found')]
     public function testRethrowsUnrelatedLogicException(): void
     {
         $command = new stdClass();

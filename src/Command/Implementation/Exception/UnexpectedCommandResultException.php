@@ -9,8 +9,7 @@ use Etel\CQRS\Command\Exception\UnexpectedCommandResult;
 use InvalidArgumentException;
 use Symfony\Component\Messenger\Exception\ExceptionInterface;
 
-use function gettype;
-use function is_object;
+use function get_debug_type;
 use function sprintf;
 
 /**
@@ -27,7 +26,7 @@ final class UnexpectedCommandResultException extends InvalidArgumentException im
     {
         return new self(message: sprintf(
             'Result type "%s" not matched expected type "%s" in command%s "%s".',
-            is_object(value: $result) ? $result::class : gettype(value: $result),
+            get_debug_type(value: $result),
             $expectedType,
             $command instanceof CommandInput ? ' input' : '',
             $command::class

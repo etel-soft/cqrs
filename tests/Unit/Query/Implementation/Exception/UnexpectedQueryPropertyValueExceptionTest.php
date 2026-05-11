@@ -26,18 +26,22 @@ use function sprintf;
 final class UnexpectedQueryPropertyValueExceptionTest extends UnitTestCase
 {
     #[Test]
-    #[TestDox('Formats message with property value for regular query')]
-    public function testRegularQueryWithReadableProperty(): void
+    #[TestDox('Formats message with scalar value type for regular query')]
+    public function testRegularQueryWithScalarValue(): void
     {
         $query = new class {
             public string $status = 'active';
         };
 
-        $exception = UnexpectedQueryPropertyValueException::create(query: $query, propertyPath: 'status');
+        $exception = UnexpectedQueryPropertyValueException::create(
+            query: $query,
+            propertyName: 'status',
+            value: 'active'
+        );
 
         $this->assertSame(
             sprintf(
-                'Property by path "status" with value type "string" in query "%s" failed requirements.',
+                'Property "status" with value type "string" in query "%s" failed requirements.',
                 $query::class,
             ),
             $exception->getMessage()
@@ -45,8 +49,8 @@ final class UnexpectedQueryPropertyValueExceptionTest extends UnitTestCase
     }
 
     #[Test]
-    #[TestDox('Formats message with property value for query input')]
-    public function testQueryInputWithReadableProperty(): void
+    #[TestDox('Formats message with object value type for query input')]
+    public function testQueryInputWithObjectValue(): void
     {
         $query = new class implements QueryInput {
             public function __construct(public DateTime $date = new DateTime()) {}
@@ -57,53 +61,17 @@ final class UnexpectedQueryPropertyValueExceptionTest extends UnitTestCase
             }
         };
 
-        $exception = UnexpectedQueryPropertyValueException::create(query: $query, propertyPath: 'date');
+        $exception = UnexpectedQueryPropertyValueException::create(
+            query: $query,
+            propertyName: 'date',
+            value: new DateTime()
+        );
 
         $this->assertSame(
             sprintf(
-                'Property by path "date" with value type "DateTime" in query input "%s" failed requirements.',
+                'Property "date" with value type "DateTime" in query input "%s" failed requirements.',
                 $query::class,
             ),
-            $exception->getMessage()
-        );
-    }
-
-    #[Test]
-    #[TestDox('Formats message without value when property path cannot be traversed')]
-    public function testWithUntraversablePropertyPath(): void
-    {
-        $query = new class {
-            public string $name = 'test';
-        };
-
-        $exception = UnexpectedQueryPropertyValueException::create(
-            query: $query,
-            propertyPath: 'name.nested'
-        );
-
-        $this->assertSame(
-            sprintf('Property path "name.nested" in query "%s" failed requirements.', $query::class),
-            $exception->getMessage()
-        );
-    }
-
-    #[Test]
-    #[TestDox('Formats untraversable path message for query input')]
-    public function testQueryInputWithUntraversablePropertyPath(): void
-    {
-        $query = new class implements QueryInput {
-            public string $name = 'test';
-
-            public function toQuery(): object
-            {
-                return new stdClass();
-            }
-        };
-
-        $exception = UnexpectedQueryPropertyValueException::create(query: $query, propertyPath: 'name.nested');
-
-        $this->assertSame(
-            sprintf('Property path "name.nested" in query input "%s" failed requirements.', $query::class),
             $exception->getMessage()
         );
     }
@@ -119,7 +87,8 @@ final class UnexpectedQueryPropertyValueExceptionTest extends UnitTestCase
 
         $exception = UnexpectedQueryPropertyValueException::create(
             query: $query,
-            propertyPath: 'status',
+            propertyName: 'status',
+            value: 'ok',
             previous: $previous
         );
 
@@ -134,7 +103,11 @@ final class UnexpectedQueryPropertyValueExceptionTest extends UnitTestCase
             public string $status = 'ok';
         };
 
-        $exception = UnexpectedQueryPropertyValueException::create(query: $query, propertyPath: 'status');
+        $exception = UnexpectedQueryPropertyValueException::create(
+            query: $query,
+            propertyName: 'status',
+            value: 'ok'
+        );
 
         /* @noinspection PhpConditionAlreadyCheckedInspection */
         $this->assertInstanceOf(UnexpectedQueryPropertyValue::class, $exception);

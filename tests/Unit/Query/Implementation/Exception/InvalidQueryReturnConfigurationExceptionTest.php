@@ -27,7 +27,7 @@ final class InvalidQueryReturnConfigurationExceptionTest extends UnitTestCase
         $exception = InvalidQueryReturnConfigurationException::create(query: new stdClass());
 
         $this->assertSame(
-            'Query "stdClass" was handled zero times (asynchronous?) but bus require a result from handler.',
+            'Query "stdClass" was handled zero times, but query can not be asynchronous.',
             $exception->getMessage()
         );
     }

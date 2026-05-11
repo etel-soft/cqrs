@@ -7,7 +7,6 @@ namespace Etel\CQRS\Query\Exception;
 use Throwable;
 
 /**
- * Exception for cases when query/input data passed validation, but still invalid by any reason (some validation
- * is missing or not properly configured).
+ * Exception for cases when query/input data passed validation, but is still invalid for any reason.
  */
 interface InvalidQueryData extends Throwable {}
