@@ -39,7 +39,7 @@ final class UnexpectedQueryResultExceptionTest extends UnitTestCase
 
         $this->assertSame(
             sprintf(
-                'Result type "NULL" not matched expected type "DateTimeImmutable" in query input "%s".',
+                'Result type "null" not matched expected type "DateTimeImmutable" in query input "%s".',
                 $query::class
             ),
             $exception->getMessage()

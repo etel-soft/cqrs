@@ -8,7 +8,9 @@ use DateTimeImmutable;
 use Etel\CQRS\Query\Implementation\Exception\InvalidQueryReturnConfigurationException;
 use Etel\CQRS\Query\Implementation\Exception\UnexpectedQueryResultException;
 use Etel\CQRS\Query\Implementation\MessengerQueryBus;
+use Etel\CQRS\Query\Implementation\QueryBusOptionsStamp;
 use Etel\CQRS\Query\QueryBus;
+use Etel\CQRS\Query\QueryBusOptions;
 use Etel\CQRSTests\Unit\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -18,7 +20,6 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\LogicException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
-use Symfony\Component\Messenger\Stamp\StampInterface;
 
 /**
  * @internal
@@ -37,38 +38,32 @@ final class MessengerQueryBusTest extends UnitTestCase
     }
 
     #[Test]
-    #[TestDox('Dispatches without waiting for result when expectResult is false')]
-    public function testAsyncDispatchReturnsFalse(): void
+    #[TestDox('Wraps QueryBusOptions in QueryBusOptionsStamp when dispatching')]
+    public function testDispatchWrapsOptionsInBusOptionsStamp(): void
     {
         $query = new stdClass();
+        $options = new QueryBusOptions(validationGroups: ['Default']);
+        $capturedStamps = null;
 
         $bus = new MessengerQueryBus(
-            queryMessageBus: $this->createMockConfig(type: MessageBusInterface::class)
-                ->addMethodReturns(name: 'dispatch', arguments: [$query, []], return: new Envelope(message: $query))
-                ->getSealedMock()
-        );
-
-        $bus->query(query: $query, expectResult: false);
-    }
-
-    #[Test]
-    #[TestDox('Passes custom stamps when dispatching asynchronously')]
-    public function testAsyncDispatchForwardsStamps(): void
-    {
-        $query = new stdClass();
-        $stamp = $this->createStub(StampInterface::class);
-
-        $bus = new MessengerQueryBus(
-            queryMessageBus: $this->createMockConfig(type: MessageBusInterface::class)
-                ->addMethodReturns(
+            queryMessageBus: $this->createStubConfig(type: MessageBusInterface::class)
+                ->addMethodReturnsCallback(
                     name: 'dispatch',
-                    arguments: [$query, [$stamp]],
-                    return: new Envelope(message: $query)
+                    callback: function (object $message, array $stamps) use (&$capturedStamps): Envelope {
+                        $capturedStamps = $stamps;
+
+                        return new Envelope($message, [new HandledStamp(result: new stdClass(), handlerName: 'test')]);
+                    }
                 )
-                ->getSealedMock()
+                ->getSealedStub()
         );
 
-        $bus->query(query: $query, expectResult: false, stamps: [$stamp]);
+        $bus->query(query: $query, options: $options);
+
+        $this->assertIsArray($capturedStamps);
+        $this->assertCount(1, $capturedStamps);
+        $this->assertInstanceOf(QueryBusOptionsStamp::class, $capturedStamps[0]);
+        $this->assertSame($options, $capturedStamps[0]->options);
     }
 
     #[Test]
@@ -144,7 +139,7 @@ final class MessengerQueryBusTest extends UnitTestCase
     }
 
     #[Test]
-    #[TestDox('Re-throws LogicException unrelated to zero-handled messages')]
+    #[TestDox('Throws LogicException when multiple handlers are found')]
     public function testRethrowsUnrelatedLogicException(): void
     {
         $query = new stdClass();

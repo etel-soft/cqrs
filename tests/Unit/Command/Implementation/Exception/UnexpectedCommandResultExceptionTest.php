@@ -39,7 +39,7 @@ final class UnexpectedCommandResultExceptionTest extends UnitTestCase
 
         $this->assertSame(
             sprintf(
-                'Result type "NULL" not matched expected type "DateTimeImmutable" in command input "%s".',
+                'Result type "null" not matched expected type "DateTimeImmutable" in command input "%s".',
                 $command::class
             ),
             $exception->getMessage()

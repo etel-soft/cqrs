@@ -20,7 +20,7 @@ final class InvalidQueryReturnConfigurationException extends InvalidArgumentExce
     public static function create(object $query): self
     {
         return new self(message: sprintf(
-            'Query "%s" was handled zero times (asynchronous?) but bus require a result from handler.',
+            'Query "%s" was handled zero times, but query can not be asynchronous.',
             $query::class
         ));
     }

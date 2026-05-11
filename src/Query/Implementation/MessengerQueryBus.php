@@ -9,30 +9,24 @@ use Etel\CQRS\Query\Implementation\Exception\InvalidQueryReturnConfigurationExce
 use Etel\CQRS\Query\Implementation\Exception\UnexpectedQueryPropertyValueException;
 use Etel\CQRS\Query\Implementation\Exception\UnexpectedQueryResultException;
 use Etel\CQRS\Query\QueryBus;
+use Etel\CQRS\Query\QueryBusOptions;
 use Override;
 use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\Exception\LogicException;
-use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Messenger\Stamp\StampInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 
-use function str_contains;
+use function count;
+use function sprintf;
 
 /**
  * Decorator for Symfony Messenger.
  */
-final class MessengerQueryBus implements QueryBus
+final readonly class MessengerQueryBus implements QueryBus
 {
-    use HandleTrait;
-
-    public function __construct(MessageBusInterface $queryMessageBus)
-    {
-        $this->messageBus = $queryMessageBus;
-    }
+    public function __construct(private MessageBusInterface $queryMessageBus) {}
 
     /**
-     * @param array<StampInterface> $stamps
-     *
      * @throws InvalidQueryDataException                When query/input data passed validation, but still invalid
      *                                                  by any reason
      * @throws InvalidQueryReturnConfigurationException When a query cannot be handled immediately
@@ -44,23 +38,27 @@ final class MessengerQueryBus implements QueryBus
      * @throws ExceptionInterface                       For any other exceptions
      */
     #[Override]
-    public function query(object $query, bool|string $expectResult = true, array $stamps = []): mixed
+    public function query(object $query, string|true $expectResult = true, ?QueryBusOptions $options = null): mixed
     {
-        if ($expectResult === false) {
-            $this->messageBus->dispatch($query, $stamps);
+        $stamps = $options !== null ? [new QueryBusOptionsStamp(options: $options)] : [];
 
-            return null;
+        $envelope = $this->queryMessageBus->dispatch($query, $stamps);
+        $handledStamps = $envelope->all(stampFqcn: HandledStamp::class);
+        $handled = count(value: $handledStamps);
+
+        if ($handled === 0) {
+            throw InvalidQueryReturnConfigurationException::create(query: $query);
         }
 
-        try {
-            $result = $this->handle(message: $query, stamps: $stamps);
-        } catch (LogicException $exception) {
-            if (str_contains(haystack: $exception->getMessage(), needle: 'was handled zero times')) {
-                throw InvalidQueryReturnConfigurationException::create(query: $query);
-            }
-
-            throw $exception;
+        if ($handled > 1) {
+            throw new LogicException(message: sprintf(
+                'Query of type "%s" was handled multiple times. Only one handler is allowed, got %d handlers.',
+                $query::class,
+                $handled
+            ));
         }
+
+        $result = $handledStamps[0]->getResult();
 
         if ($expectResult !== true && !$result instanceof $expectResult) {
             throw UnexpectedQueryResultException::create(query: $query, expectedType: $expectResult, result: $result);

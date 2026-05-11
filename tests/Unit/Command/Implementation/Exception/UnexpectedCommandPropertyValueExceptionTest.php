@@ -26,18 +26,22 @@ use function sprintf;
 final class UnexpectedCommandPropertyValueExceptionTest extends UnitTestCase
 {
     #[Test]
-    #[TestDox('Formats message with property value for regular command')]
-    public function testRegularCommandWithReadableProperty(): void
+    #[TestDox('Formats message with scalar value type for regular command')]
+    public function testRegularCommandWithScalarValue(): void
     {
         $command = new class {
             public string $status = 'active';
         };
 
-        $exception = UnexpectedCommandPropertyValueException::create(command: $command, propertyPath: 'status');
+        $exception = UnexpectedCommandPropertyValueException::create(
+            command: $command,
+            propertyName: 'status',
+            value: 'active'
+        );
 
         $this->assertSame(
             sprintf(
-                'Property by path "status" with value type "string" in command "%s" failed requirements.',
+                'Property "status" with value type "string" in command "%s" failed requirements.',
                 $command::class,
             ),
             $exception->getMessage()
@@ -45,8 +49,8 @@ final class UnexpectedCommandPropertyValueExceptionTest extends UnitTestCase
     }
 
     #[Test]
-    #[TestDox('Formats message with property value for command input')]
-    public function testCommandInputWithReadableProperty(): void
+    #[TestDox('Formats message with object value type for command input')]
+    public function testCommandInputWithObjectValue(): void
     {
         $command = new class implements CommandInput {
             public function __construct(public DateTime $date = new DateTime()) {}
@@ -57,50 +61,17 @@ final class UnexpectedCommandPropertyValueExceptionTest extends UnitTestCase
             }
         };
 
-        $exception = UnexpectedCommandPropertyValueException::create(command: $command, propertyPath: 'date');
+        $exception = UnexpectedCommandPropertyValueException::create(
+            command: $command,
+            propertyName: 'date',
+            value: new DateTime()
+        );
 
         $this->assertSame(
             sprintf(
-                'Property by path "date" with value type "DateTime" in command input "%s" failed requirements.',
+                'Property "date" with value type "DateTime" in command input "%s" failed requirements.',
                 $command::class
             ),
-            $exception->getMessage()
-        );
-    }
-
-    #[Test]
-    #[TestDox('Formats message without value when property path cannot be traversed')]
-    public function testWithUntraversablePropertyPath(): void
-    {
-        $command = new class {
-            public string $name = 'test';
-        };
-
-        $exception = UnexpectedCommandPropertyValueException::create(command: $command, propertyPath: 'name.nested');
-
-        $this->assertSame(
-            sprintf('Property path "name.nested" in command "%s" failed requirements.', $command::class),
-            $exception->getMessage()
-        );
-    }
-
-    #[Test]
-    #[TestDox('Formats untraversable path message for command input')]
-    public function testCommandInputWithUntraversablePropertyPath(): void
-    {
-        $command = new class implements CommandInput {
-            public string $name = 'test';
-
-            public function toCommand(): object
-            {
-                return new stdClass();
-            }
-        };
-
-        $exception = UnexpectedCommandPropertyValueException::create(command: $command, propertyPath: 'name.nested');
-
-        $this->assertSame(
-            sprintf('Property path "name.nested" in command input "%s" failed requirements.', $command::class),
             $exception->getMessage()
         );
     }
@@ -116,7 +87,8 @@ final class UnexpectedCommandPropertyValueExceptionTest extends UnitTestCase
 
         $exception = UnexpectedCommandPropertyValueException::create(
             command: $command,
-            propertyPath: 'status',
+            propertyName: 'status',
+            value: 'ok',
             previous: $previous
         );
 
@@ -131,7 +103,11 @@ final class UnexpectedCommandPropertyValueExceptionTest extends UnitTestCase
             public string $status = 'ok';
         };
 
-        $exception = UnexpectedCommandPropertyValueException::create(command: $command, propertyPath: 'status');
+        $exception = UnexpectedCommandPropertyValueException::create(
+            command: $command,
+            propertyName: 'status',
+            value: 'ok'
+        );
 
         /* @noinspection PhpConditionAlreadyCheckedInspection */
         $this->assertInstanceOf(UnexpectedCommandPropertyValue::class, $exception);
