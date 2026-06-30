@@ -1,0 +1,9 @@
+services:
+    -
+        class: Etel\CQRS\PHPStan\QueryResultReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicMethodReturnTypeExtension
+    -
+        class: Etel\CQRS\PHPStan\CommandResultReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicMethodReturnTypeExtension

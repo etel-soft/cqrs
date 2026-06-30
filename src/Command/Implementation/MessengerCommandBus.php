@@ -17,6 +17,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 
 use function count;
+use function is_string;
 use function sprintf;
 
 /**
@@ -45,7 +46,20 @@ final readonly class MessengerCommandBus implements CommandBus
     ): mixed {
         $stamps = $options !== null ? [new CommandBusOptionsStamp(options: $options)] : [];
 
-        if ($expectResult === false) {
+        $expectsResult = $expectResult !== false;
+        $expectedType = is_string(value: $expectResult) ? $expectResult : null;
+        $nullable = false;
+
+        if (!$expectsResult) {
+            $meta = CommandResultReader::read(command: $command);
+
+            if ($meta !== null) {
+                $expectsResult = true;
+                [$expectedType, $nullable] = $meta;
+            }
+        }
+
+        if (!$expectsResult) {
             $this->commandMessageBus->dispatch($command, $stamps);
 
             return null;
@@ -69,12 +83,16 @@ final readonly class MessengerCommandBus implements CommandBus
 
         $result = $handledStamps[0]->getResult();
 
-        if ($expectResult !== true && !$result instanceof $expectResult) {
-            throw UnexpectedCommandResultException::create(
-                command: $command,
-                expectedType: $expectResult,
-                result: $result
-            );
+        if ($expectedType !== null) {
+            $matches = $result === null ? $nullable : $result instanceof $expectedType;
+
+            if (!$matches) {
+                throw UnexpectedCommandResultException::create(
+                    command: $command,
+                    expectedType: $expectedType,
+                    result: $result
+                );
+            }
         }
 
         return $result;
