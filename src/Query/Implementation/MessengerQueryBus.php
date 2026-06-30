@@ -17,6 +17,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 
 use function count;
+use function is_string;
 use function sprintf;
 
 /**
@@ -60,8 +61,27 @@ final readonly class MessengerQueryBus implements QueryBus
 
         $result = $handledStamps[0]->getResult();
 
-        if ($expectResult !== true && !$result instanceof $expectResult) {
-            throw UnexpectedQueryResultException::create(query: $query, expectedType: $expectResult, result: $result);
+        $expectedType = is_string(value: $expectResult) ? $expectResult : null;
+        $nullable = false;
+
+        if ($expectedType === null) {
+            $meta = QueryResultReader::read(query: $query);
+
+            if ($meta !== null) {
+                [$expectedType, $nullable] = $meta;
+            }
+        }
+
+        if ($expectedType !== null) {
+            $matches = $result === null ? $nullable : $result instanceof $expectedType;
+
+            if (!$matches) {
+                throw UnexpectedQueryResultException::create(
+                    query: $query,
+                    expectedType: $expectedType,
+                    result: $result
+                );
+            }
         }
 
         return $result;

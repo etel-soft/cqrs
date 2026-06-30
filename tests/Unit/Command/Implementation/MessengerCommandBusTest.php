@@ -11,6 +11,8 @@ use Etel\CQRS\Command\Implementation\CommandBusOptionsStamp;
 use Etel\CQRS\Command\Implementation\Exception\InvalidCommandReturnConfigurationException;
 use Etel\CQRS\Command\Implementation\Exception\UnexpectedCommandResultException;
 use Etel\CQRS\Command\Implementation\MessengerCommandBus;
+use Etel\CQRSTests\Unit\Command\Implementation\Fixture\CommandWithNullableResult;
+use Etel\CQRSTests\Unit\Command\Implementation\Fixture\CommandWithResult;
 use Etel\CQRSTests\Unit\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -170,5 +172,65 @@ final class MessengerCommandBusTest extends UnitTestCase
         $this->expectException(LogicException::class);
 
         $bus->command(command: $command, expectResult: true);
+    }
+
+    #[Test]
+    #[TestDox('CommandResult attribute opts into a synchronous result and returns it')]
+    public function testReturnsResultMatchingCommandResultAttribute(): void
+    {
+        $command = new CommandWithResult();
+        $expectedResult = new DateTimeImmutable();
+
+        $bus = $this->busReturning(command: $command, result: $expectedResult);
+
+        $this->assertSame($expectedResult, $bus->command(command: $command));
+    }
+
+    #[Test]
+    #[TestDox('Throws when the result does not match the CommandResult attribute type')]
+    public function testThrowsWhenResultViolatesCommandResultAttribute(): void
+    {
+        $command = new CommandWithResult();
+
+        $bus = $this->busReturning(command: $command, result: 'wrong type');
+
+        $this->expectException(UnexpectedCommandResultException::class);
+
+        $bus->command(command: $command);
+    }
+
+    #[Test]
+    #[TestDox('Throws on null result when the CommandResult attribute is not nullable')]
+    public function testThrowsOnNullResultWhenAttributeNotNullable(): void
+    {
+        $command = new CommandWithResult();
+
+        $bus = $this->busReturning(command: $command, result: null);
+
+        $this->expectException(UnexpectedCommandResultException::class);
+
+        $bus->command(command: $command);
+    }
+
+    #[Test]
+    #[TestDox('Accepts null result when the CommandResult attribute is nullable')]
+    public function testAcceptsNullResultWhenAttributeNullable(): void
+    {
+        $command = new CommandWithNullableResult();
+
+        $bus = $this->busReturning(command: $command, result: null);
+
+        $this->assertNull($bus->command(command: $command));
+    }
+
+    private function busReturning(object $command, mixed $result): MessengerCommandBus
+    {
+        return new MessengerCommandBus(
+            commandMessageBus: $this->createStubConfig(type: MessageBusInterface::class)
+                ->addMethodReturns(name: 'dispatch', return: new Envelope(message: $command, stamps: [
+                    new HandledStamp(result: $result, handlerName: 'handler'),
+                ]))
+                ->getSealedStub()
+        );
     }
 }

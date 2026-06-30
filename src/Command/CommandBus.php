@@ -20,8 +20,10 @@ interface CommandBus
      * By default, ($expectResult = false) the result is discarded — use this
      * for fire-and-forget or asynchronous commands. Pass true or a FQCN
      * when you need the result synchronously (e.g. a newly created entity's ID).
+     * A {@see CommandResult} attribute on the command opts it into a synchronous,
+     * type-checked result without passing $expectResult at the call site.
      *
-     * @template T of object
+     * @template T of object = object
      *
      * @param bool|class-string<T> $expectResult
      *

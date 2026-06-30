@@ -27,12 +27,20 @@
     },
     "autoload": {
         "psr-4": {
-            "Etel\\CQRS\\": "src"
+            "Etel\\CQRS\\": "src",
+            "Etel\\CQRS\\PHPStan\\": "extension"
         }
     },
     "autoload-dev": {
         "psr-4": {
             "Etel\\CQRSTests\\": "tests"
+        }
+    },
+    "extra": {
+        "phpstan": {
+            "includes": [
+                "extension.neon"
+            ]
         }
     }
 }

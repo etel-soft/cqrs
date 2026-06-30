@@ -11,6 +11,8 @@ use Etel\CQRS\Query\Implementation\MessengerQueryBus;
 use Etel\CQRS\Query\Implementation\QueryBusOptionsStamp;
 use Etel\CQRS\Query\QueryBus;
 use Etel\CQRS\Query\QueryBusOptions;
+use Etel\CQRSTests\Unit\Query\Implementation\Fixture\QueryWithNullableResult;
+use Etel\CQRSTests\Unit\Query\Implementation\Fixture\QueryWithResult;
 use Etel\CQRSTests\Unit\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -156,5 +158,65 @@ final class MessengerQueryBusTest extends UnitTestCase
         $this->expectException(LogicException::class);
 
         $bus->query(query: $query);
+    }
+
+    #[Test]
+    #[TestDox('Infers and accepts the result type declared by a QueryResult attribute')]
+    public function testReturnsResultMatchingQueryResultAttribute(): void
+    {
+        $query = new QueryWithResult();
+        $expectedResult = new DateTimeImmutable();
+
+        $bus = $this->busReturning(query: $query, result: $expectedResult);
+
+        $this->assertSame($expectedResult, $bus->query(query: $query));
+    }
+
+    #[Test]
+    #[TestDox('Throws when the result does not match the QueryResult attribute type')]
+    public function testThrowsWhenResultViolatesQueryResultAttribute(): void
+    {
+        $query = new QueryWithResult();
+
+        $bus = $this->busReturning(query: $query, result: 'wrong type');
+
+        $this->expectException(UnexpectedQueryResultException::class);
+
+        $bus->query(query: $query);
+    }
+
+    #[Test]
+    #[TestDox('Throws on null result when the QueryResult attribute is not nullable')]
+    public function testThrowsOnNullResultWhenAttributeNotNullable(): void
+    {
+        $query = new QueryWithResult();
+
+        $bus = $this->busReturning(query: $query, result: null);
+
+        $this->expectException(UnexpectedQueryResultException::class);
+
+        $bus->query(query: $query);
+    }
+
+    #[Test]
+    #[TestDox('Accepts null result when the QueryResult attribute is nullable')]
+    public function testAcceptsNullResultWhenAttributeNullable(): void
+    {
+        $query = new QueryWithNullableResult();
+
+        $bus = $this->busReturning(query: $query, result: null);
+
+        $this->assertNull($bus->query(query: $query));
+    }
+
+    private function busReturning(object $query, mixed $result): MessengerQueryBus
+    {
+        return new MessengerQueryBus(
+            queryMessageBus: $this->createStubConfig(type: MessageBusInterface::class)
+                ->addMethodReturns(name: 'dispatch', return: new Envelope(message: $query, stamps: [
+                    new HandledStamp(result: $result, handlerName: 'handler'),
+                ]))
+                ->getSealedStub()
+        );
     }
 }

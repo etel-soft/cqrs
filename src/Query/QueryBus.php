@@ -18,10 +18,11 @@ interface QueryBus
      * Handles queries and returns result.
      *
      * The parameter $expectResult can specify the expected result behavior, where:
-     * - TRUE means any possible result value (default);
+     * - TRUE means any possible result value (default); the result type is then taken from a
+     *   {@see QueryResult} attribute on the query, when present;
      * - FQCN as class-string to specify the expected instance type of the result.
      *
-     * @template T of object
+     * @template T of object = object
      *
      * @param class-string<T>|true $expectResult
      *
